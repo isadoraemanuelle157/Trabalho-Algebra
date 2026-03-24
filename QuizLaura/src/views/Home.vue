@@ -15,11 +15,11 @@
           
           <div class="home-buttons">
             <button class="btn-start-main" @click="goToSetup">
-              <span class="btn-icon">▶</span>
+              <span class="btn-icon"></span>
               <span>Começar</span>
             </button>
             <button class="btn-ranking-home" @click="showRanking = true">
-              <span class="btn-icon">🏆</span>
+              <span class="btn-icon"></span>
               <span>Ranking</span>
             </button>
           </div>
@@ -105,7 +105,7 @@
               <!-- Dificuldade -->
               <div class="form-group">
                 <label class="form-label">
-                  <span class="label-icon">🎮</span>
+                  <span class="label-icon"></span>
                   Nível de Dificuldade
                 </label>
                 <div class="difficulty-cards">
@@ -221,13 +221,13 @@
 
           <div class="results-actions">
             <button class="btn-gabarito" @click="showGabarito = true">
-              📋 Ver Gabarito
+               Ver Gabarito
             </button>
             <button class="btn-restart" @click="restartQuiz">
               🔄 Jogar Novamente
             </button>
             <button class="btn-ranking" @click="showRanking = true">
-              🏆 Ver Ranking
+               Ver Ranking
             </button>
             <button class="btn-home" @click="goToHome">
               🏠 Menu Principal
@@ -250,7 +250,7 @@
         <div v-if="showGabarito" class="modal-overlay" @click.self="showGabarito = false">
           <div class="modal-content gabarito-modal">
             <div class="modal-header">
-              <h3 class="modal-title">📋 Gabarito Completo</h3>
+              <h3 class="modal-title"> Gabarito Completo</h3>
               <button class="btn-close" @click="showGabarito = false">×</button>
             </div>
             
