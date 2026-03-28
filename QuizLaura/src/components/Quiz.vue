@@ -7,7 +7,7 @@
         <span class="player-name">{{ playerName }}</span>
       </div>
       <div class="difficulty-badge" :class="`badge-${difficulty}`">
-        {{ difficultyConfig.icon }}
+           <component :is="difficultyConfig.icon" size="16" />
         {{ difficultyConfig.name }}
       </div>
       <button class="btn-exit" @click="confirmExit">✕</button>
@@ -345,6 +345,42 @@ const exitQuiz = () => {
 </script>
 
 <style scoped>
+/* Adicionar estilo para o ícone na badge */
+.difficulty-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.difficulty-badge svg {
+  stroke-width: 2.5;
+}
+
+.badge-easy { 
+  background: #48bb78; 
+  color: white; 
+}
+
+.badge-easy svg { color: white; }
+
+.badge-medium { 
+  background: #ed8936; 
+  color: white; 
+}
+
+.badge-medium svg { color: white; }
+
+.badge-hard { 
+  background: #f56565; 
+  color: white; 
+}
+
+.badge-hard svg { color: white; }
+
 .quiz-view {
   min-height: 100vh;
   display: flex;

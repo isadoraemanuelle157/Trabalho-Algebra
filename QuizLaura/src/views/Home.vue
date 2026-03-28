@@ -5,7 +5,14 @@
       <div v-if="currentScreen === 'home'" class="screen home-screen" key="home">
         <div class="home-content">
           <div class="logo-container">
-            <div class="logo-icon">🎯</div>
+            <!-- SUBSTITUÍDO: Imagem da Laura no lugar do ícone Target -->
+  <div class="logo-image-wrapper">
+    <img 
+      src="/src/assets/laura-avatar.png" 
+      alt="Laura" 
+      class="logo-image"
+    />
+  </div>
             <div class="logo-ring"></div>
             <div class="logo-ring delay-1"></div>
             <div class="logo-ring delay-2"></div>
@@ -15,11 +22,11 @@
           
           <div class="home-buttons">
             <button class="btn-start-main" @click="goToSetup">
-              <span class="btn-icon"></span>
+              <Play size="24" />
               <span>Começar</span>
             </button>
             <button class="btn-ranking-home" @click="showRanking = true">
-              <span class="btn-icon"></span>
+              <Trophy size="24" />
               <span>Ranking</span>
             </button>
           </div>
@@ -27,7 +34,7 @@
         
         <div class="floating-shapes">
           <span v-for="n in 6" :key="n" class="shape" :class="`shape-${n}`">
-            {{ ['➕', '➖', '✖', '➗', '√', 'π'][n-1] }}
+            <component :is="mathIcons[n-1]" size="32" />
           </span>
         </div>
       </div>
@@ -41,11 +48,11 @@
           <div class="setup-illustration">
             <div class="illustration-content">
               <div class="math-symbols">
-                <span class="symbol float-1">∑</span>
-                <span class="symbol float-2">π</span>
-                <span class="symbol float-3">√</span>
-                <span class="symbol float-4">∞</span>
-                <span class="symbol float-5">∫</span>
+                <span class="symbol float-1"><Sigma size="48" /></span>
+                <span class="symbol float-2"><Pi size="48" /></span>
+                <span class="symbol float-3"><Radical size="48" /></span>
+                <span class="symbol float-4"><Infinity size="48" /></span>
+                <span class="symbol float-5"><FunctionSquare size="48" /></span>
               </div>
               <div class="illustration-text">
                 <h3>Pronto para o desafio?</h3>
@@ -53,15 +60,15 @@
               </div>
               <div class="feature-list">
                 <div class="feature-item">
-                  <span class="feature-icon">📊</span>
+                  <BarChart3 size="24" />
                   <span>10 questões desafiadoras</span>
                 </div>
                 <div class="feature-item">
-                  <span class="feature-icon">⏱️</span>
+                  <Clock size="24" />
                   <span>3 níveis de dificuldade</span>
                 </div>
                 <div class="feature-item">
-                  <span class="feature-icon">🏅</span>
+                  <Medal size="24" />
                   <span>Competição no ranking</span>
                 </div>
               </div>
@@ -72,32 +79,33 @@
           <div class="setup-form-wrapper">
             <div class="setup-form">
               <button class="btn-back" @click="goToHome">
-                <span>←</span>
+                <ArrowLeft size="20" />
                 <span>Voltar</span>
               </button>
               
               <div class="form-header">
-                <div class="form-icon">⚙️</div>
+                <div class="form-icon">
+                  <Cog size="56" />
+                </div>
                 <h2 class="form-title">Configurar Jogo</h2>
                 <p class="form-subtitle">Personalize sua experiência</p>
               </div>
 
-              <!-- Nome -->
-              <div class="form-group">
+              <!-- Nome - Centralizado e compacto -->
+              <div class="form-group centered">
                 <label class="form-label">
-                  <span class="label-icon">👤</span>
+                  <User size="18" />
                   Nome do Jogador
                 </label>
-                <div class="input-wrapper">
+                <div class="input-wrapper centered-input">
                   <input 
                     v-model="playerName" 
                     type="text" 
-                    placeholder="Digite seu nome ou do grupo..."
-                    class="form-input"
+                    placeholder="Digite seu nome..."
+                    class="form-input compact"
                     maxlength="25"
                     @keyup.enter="startQuiz"
                   >
-                  <div class="input-focus-border"></div>
                 </div>
                 <span class="input-hint">Máximo 25 caracteres</span>
               </div>
@@ -105,7 +113,7 @@
               <!-- Dificuldade -->
               <div class="form-group">
                 <label class="form-label">
-                  <span class="label-icon"></span>
+                  <Layers size="18" />
                   Nível de Dificuldade
                 </label>
                 <div class="difficulty-cards">
@@ -116,9 +124,9 @@
                     @click="selectedDifficulty = level.id"
                   >
                     <div class="diff-card-header">
-                      <span class="diff-emoji">{{ level.icon }}</span>
+                      <component :is="level.icon" size="32" />
                       <div v-if="selectedDifficulty === level.id" class="diff-check">
-                        <span>✓</span>
+                        <Check size="16" />
                       </div>
                     </div>
                     <div class="diff-card-body">
@@ -127,7 +135,7 @@
                     </div>
                     <div class="diff-card-footer">
                       <span class="time-tag">
-                        <span class="time-icon">⏱</span>
+                        <Timer size="14" />
                         {{ level.time > 0 ? level.time + 's' : 'Livre' }}
                       </span>
                     </div>
@@ -145,7 +153,8 @@
                 <div class="preview-item">
                   <span class="preview-label">Modo:</span>
                   <span class="preview-value mode" :class="selectedDifficulty">
-                    {{ currentDifficulty.icon }} {{ currentDifficulty.name }}
+                    <component :is="currentDifficulty.icon" size="16" />
+                    {{ currentDifficulty.name }}
                   </span>
                 </div>
               </div>
@@ -157,7 +166,7 @@
                 :class="{ 'ready': playerName.trim() }"
               >
                 <span class="btn-text">{{ playerName.trim() ? 'Iniciar Quiz!' : 'Digite seu nome' }}</span>
-                <span class="btn-arrow">→</span>
+                <ArrowRight size="20" />
               </button>
             </div>
           </div>
@@ -184,10 +193,13 @@
         <div class="results-card">
           <div class="results-header">
             <div class="trophy" :class="trophyClass">
-              {{ trophyEmoji }}
+              <component :is="trophyIcon" size="80" />
             </div>
             <h2 class="results-title">Quiz Finalizado!</h2>
-            <p class="player-result-name">👤 {{ playerName }}</p>
+            <p class="player-result-name">
+              <User size="18" />
+              {{ playerName }}
+            </p>
           </div>
           
           <div class="score-circle">
@@ -199,7 +211,7 @@
           </div>
 
           <div class="difficulty-result" :class="`result-${selectedDifficulty}`">
-            <span class="result-icon">{{ currentDifficulty.icon }}</span>
+            <component :is="currentDifficulty.icon" size="20" />
             <span class="result-text">Nível {{ currentDifficulty.name }}</span>
           </div>
 
@@ -207,13 +219,13 @@
 
           <div class="stats-row">
             <div class="stat-item correct">
-              <span class="stat-icon">✓</span>
+              <div class="stat-icon"><Check size="24" /></div>
               <span class="stat-number">{{ finalCorrect }}</span>
               <span class="stat-label">Acertos</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item wrong">
-              <span class="stat-icon">✗</span>
+              <div class="stat-icon"><X size="24" /></div>
               <span class="stat-number">{{ finalWrong }}</span>
               <span class="stat-label">Erros</span>
             </div>
@@ -221,16 +233,20 @@
 
           <div class="results-actions">
             <button class="btn-gabarito" @click="showGabarito = true">
-               Ver Gabarito
+              <ClipboardList size="20" />
+              Ver Gabarito
             </button>
             <button class="btn-restart" @click="restartQuiz">
-              🔄 Jogar Novamente
+              <RotateCcw size="20" />
+              Jogar Novamente
             </button>
             <button class="btn-ranking" @click="showRanking = true">
-               Ver Ranking
+              <Trophy size="20" />
+              Ver Ranking
             </button>
             <button class="btn-home" @click="goToHome">
-              🏠 Menu Principal
+              <Home size="20" />
+              Menu Principal
             </button>
           </div>
         </div>
@@ -250,8 +266,13 @@
         <div v-if="showGabarito" class="modal-overlay" @click.self="showGabarito = false">
           <div class="modal-content gabarito-modal">
             <div class="modal-header">
-              <h3 class="modal-title"> Gabarito Completo</h3>
-              <button class="btn-close" @click="showGabarito = false">×</button>
+              <h3 class="modal-title">
+                <ClipboardCheck size="24" />
+                Gabarito Completo
+              </h3>
+              <button class="btn-close" @click="showGabarito = false">
+                <X size="24" />
+              </button>
             </div>
             
             <div class="gabarito-list">
@@ -274,7 +295,8 @@
                   </span>
                 </div>
                 <div v-else class="user-answer timeout">
-                  <span class="user-label">⏰ Tempo esgotado</span>
+                  <TimerOff size="16" />
+                  <span class="user-label">Tempo esgotado</span>
                 </div>
               </div>
             </div>
@@ -294,7 +316,10 @@
               </div>
             </div>
 
-            <button class="btn-modal" @click="showGabarito = false">Fechar</button>
+            <button class="btn-modal" @click="showGabarito = false">
+              <X size="18" />
+              Fechar
+            </button>
           </div>
         </div>
       </Transition>
@@ -304,6 +329,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { 
+  Target, Play, Trophy, ArrowLeft, Cog, User, Layers, 
+  Check, Timer, ArrowRight, Sigma, Pi, Radical, Infinity, 
+  FunctionSquare, BarChart3, Clock, Medal, X, RotateCcw, Home, 
+  ClipboardList, ClipboardCheck, TimerOff, Plus, Minus, 
+  Divide, BookOpen, Award, Sprout, Zap, Flame
+} from 'lucide-vue-next'
 import Quiz from '../components/Quiz.vue'
 import Ranking from '../components/Ranking.vue'
 
@@ -318,25 +350,28 @@ const finalCorrect = ref(0)
 const finalWrong = ref(0)
 const quizHistory = ref([])
 
+// Ícones matemáticos para as formas flutuantes (usando Radical no lugar de SquareRoot)
+const mathIcons = [Plus, Minus, X, Divide, Radical, Pi]
+
 const difficulties = [
   {
     id: 'easy',
     name: 'Fácil',
-    icon: '🌱',
+    icon: Sprout,
     description: 'Sem pressa, ideal para aprender',
     time: 0
   },
   {
     id: 'medium',
     name: 'Médio',
-    icon: '⚡',
+    icon: Zap,
     description: 'Desafio com tempo moderado',
     time: 30
   },
   {
     id: 'hard',
     name: 'Difícil',
-    icon: '🔥',
+    icon: Flame,
     description: 'Velocidade máxima exigida!',
     time: 15
   }
@@ -346,11 +381,11 @@ const currentDifficulty = computed(() =>
   difficulties.find(d => d.id === selectedDifficulty.value)
 )
 
-const trophyEmoji = computed(() => {
-  if (finalScore.value >= 8) return '🏆'
-  if (finalScore.value >= 6) return '🥈'
-  if (finalScore.value >= 4) return '🥉'
-  return '📚'
+const trophyIcon = computed(() => {
+  if (finalScore.value >= 8) return Trophy
+  if (finalScore.value >= 6) return Medal
+  if (finalScore.value >= 4) return Award
+  return BookOpen
 })
 
 const trophyClass = computed(() => {
@@ -361,10 +396,10 @@ const trophyClass = computed(() => {
 
 const resultMessage = computed(() => {
   const percentage = (finalScore.value / 10) * 100
-  if (percentage >= 90) return "Excelente! Você é um gênio! 🌟"
-  if (percentage >= 70) return "Muito bom! Domina a matemática! 👏"
-  if (percentage >= 50) return "Bom trabalho! Continue praticando! 💪"
-  return "Continue estudando! A prática leva à perfeição! 📖"
+  if (percentage >= 90) return "Excelente! Você é um gênio! "
+  if (percentage >= 70) return "Muito bom! Domina a matemática! "
+  if (percentage >= 50) return "Bom trabalho! Continue praticando! "
+  return "Continue estudando! A prática leva à perfeição! "
 })
 
 const goToHome = () => {
@@ -396,9 +431,7 @@ const handleQuizFinish = (results) => {
   finalWrong.value = results.wrong
   quizHistory.value = results.history
   
-  // Salvar no ranking (localStorage)
   saveToRanking(results)
-  
   currentScreen.value = 'results'
 }
 
@@ -413,9 +446,7 @@ const saveToRanking = (results) => {
     date: new Date().toISOString()
   }
   rankingData.push(newEntry)
-  // Ordenar por pontuação (maior primeiro)
   rankingData.sort((a, b) => b.score - a.score)
-  // Manter apenas top 50
   const top50 = rankingData.slice(0, 50)
   localStorage.setItem('quizRanking', JSON.stringify(top50))
 }
@@ -426,6 +457,81 @@ const restartQuiz = () => {
 </script>
 
 <style scoped>
+/* Logo Image - Estilo ícone circular */
+.logo-image-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 10;
+  border: 4px solid rgba(102, 126, 234, 0.5);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  animation: bounce 2s infinite;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3px;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* Ajuste nos anéis para a nova imagem */
+.logo-ring {
+  position: absolute;
+  border: 3px solid rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: ripple 3s infinite;
+}
+
+.logo-ring.delay-1 { 
+  animation-delay: 1s; 
+  width: 150px; 
+  height: 150px; 
+  left: -15px; 
+  top: -15px; 
+}
+
+.logo-ring.delay-2 { 
+  animation-delay: 2s; 
+  width: 180px; 
+  height: 180px; 
+  left: -30px; 
+  top: -30px; 
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+  .logo-image-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logo-ring {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logo-ring.delay-1 {
+    width: 125px;
+    height: 125px;
+    left: -12.5px;
+    top: -12.5px;
+  }
+  
+  .logo-ring.delay-2 {
+    width: 150px;
+    height: 150px;
+    left: -25px;
+    top: -25px;
+  }
+}
 /* ===== VARIÁVEIS ===== */
 .quiz-laura-app {
   --primary: #667eea;
@@ -479,7 +585,7 @@ const restartQuiz = () => {
 }
 
 .logo-icon {
-  font-size: 5rem;
+  color: var(--primary);
   z-index: 10;
   animation: bounce 2s infinite;
 }
@@ -573,10 +679,6 @@ const restartQuiz = () => {
   transform: translateY(-3px);
 }
 
-.btn-icon {
-  font-size: 1.4rem;
-}
-
 /* Floating Shapes */
 .floating-shapes {
   position: absolute;
@@ -587,8 +689,7 @@ const restartQuiz = () => {
 
 .shape {
   position: absolute;
-  font-size: 2.5rem;
-  opacity: 0.15;
+  color: rgba(255, 255, 255, 0.15);
   animation: float-shape 20s infinite;
 }
 
@@ -663,8 +764,7 @@ const restartQuiz = () => {
 }
 
 .symbol {
-  font-size: 3rem;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
   animation: float-symbol 3s ease-in-out infinite;
 }
 
@@ -712,10 +812,6 @@ const restartQuiz = () => {
 .feature-item:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateX(5px);
-}
-
-.feature-icon {
-  font-size: 1.5rem;
 }
 
 /* Lado Direito - Formulário */
@@ -773,7 +869,7 @@ const restartQuiz = () => {
 }
 
 .form-icon {
-  font-size: 3.5rem;
+  color: var(--primary);
   margin-bottom: 15px;
 }
 
@@ -793,9 +889,14 @@ const restartQuiz = () => {
   margin-bottom: 30px;
 }
 
+.form-group.centered {
+  text-align: center;
+}
+
 .form-label {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   font-weight: 700;
   color: #2d3748;
@@ -805,26 +906,29 @@ const restartQuiz = () => {
   letter-spacing: 0.5px;
 }
 
-.label-icon {
-  font-size: 1.2rem;
-}
-
 .input-wrapper {
   position: relative;
 }
 
-.form-input {
+.input-wrapper.centered-input {
+  display: flex;
+  justify-content: center;
+}
+
+.form-input.compact {
   width: 100%;
-  padding: 18px 20px;
+  max-width: 280px;
+  padding: 14px 18px;
   border: 2px solid #e2e8f0;
-  border-radius: 14px;
-  font-size: 1.1rem;
+  border-radius: 12px;
+  font-size: 1rem;
   font-family: inherit;
   background: #f7fafc;
   transition: all 0.3s;
+  text-align: center;
 }
 
-.form-input:focus {
+.form-input.compact:focus {
   outline: none;
   border-color: var(--primary);
   background: white;
@@ -836,7 +940,7 @@ const restartQuiz = () => {
   margin-top: 8px;
   font-size: 0.85rem;
   color: #a0aec0;
-  margin-left: 5px;
+  text-align: center;
 }
 
 /* Difficulty Cards */
@@ -886,12 +990,17 @@ const restartQuiz = () => {
 .diff-card-header {
   position: relative;
   margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
 }
 
-.diff-emoji {
-  font-size: 2.5rem;
-  display: block;
+.diff-card-header > svg {
+  color: var(--primary);
 }
+
+.diff-card.active.diff-easy .diff-card-header > svg { color: var(--success); }
+.diff-card.active.diff-medium .diff-card-header > svg { color: var(--warning); }
+.diff-card.active.diff-hard .diff-card-header > svg { color: var(--error); }
 
 .diff-check {
   position: absolute;
@@ -905,8 +1014,6 @@ const restartQuiz = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 700;
   animation: scaleIn 0.3s ease;
 }
 
@@ -945,10 +1052,6 @@ const restartQuiz = () => {
   border-radius: 20px;
   color: #4a5568;
   font-weight: 600;
-}
-
-.time-icon {
-  font-size: 0.9rem;
 }
 
 /* Selection Preview */
@@ -1042,11 +1145,11 @@ const restartQuiz = () => {
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-.btn-arrow {
+.btn-start-game.ready svg {
   transition: transform 0.3s;
 }
 
-.btn-start-game.ready:hover .btn-arrow {
+.btn-start-game.ready:hover svg {
   transform: translateX(5px);
 }
 
@@ -1076,14 +1179,21 @@ const restartQuiz = () => {
 }
 
 .trophy {
-  font-size: 5rem;
+  display: inline-flex;
+  color: var(--warning);
   margin-bottom: 15px;
   animation: float 3s ease-in-out infinite;
-  display: inline-block;
 }
 
-.trophy.gold { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6)); }
-.trophy.silver { filter: drop-shadow(0 0 20px rgba(192, 192, 192, 0.6)); }
+.trophy.gold { 
+  color: #ffd700;
+  filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6)); 
+}
+
+.trophy.silver { 
+  color: #c0c0c0;
+  filter: drop-shadow(0 0 20px rgba(192, 192, 192, 0.6)); 
+}
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
@@ -1101,6 +1211,10 @@ const restartQuiz = () => {
   color: #718096;
   font-size: 1.1rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .score-circle {
@@ -1191,7 +1305,6 @@ const restartQuiz = () => {
 }
 
 .stat-icon {
-  font-size: 1.5rem;
   width: 40px;
   height: 40px;
   display: flex;
@@ -1337,12 +1450,14 @@ const restartQuiz = () => {
   font-size: 1.5rem;
   font-weight: 800;
   color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .btn-close {
   background: none;
   border: none;
-  font-size: 2rem;
   color: #a0aec0;
   cursor: pointer;
   width: 40px;
@@ -1526,6 +1641,10 @@ const restartQuiz = () => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-modal:hover {
@@ -1684,6 +1803,10 @@ const restartQuiz = () => {
   
   .score-number {
     font-size: 3rem;
+  }
+  
+  .form-input.compact {
+    max-width: 100%;
   }
 }
 </style>

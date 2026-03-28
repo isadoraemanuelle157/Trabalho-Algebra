@@ -6,14 +6,14 @@
           <!-- Header -->
           <div class="ranking-header">
             <div class="ranking-title-section">
-              <span class="ranking-icon">🏆</span>
+              <Trophy class="ranking-icon" size="48" />
               <div>
                 <h2 class="ranking-title">Hall da Fama</h2>
                 <p class="ranking-subtitle">Os melhores jogadores de todos os tempos</p>
               </div>
             </div>
             <button class="btn-close-ranking" @click="closeModal">
-              <span>✕</span>
+              <X size="24" />
             </button>
           </div>
 
@@ -25,7 +25,7 @@
               :class="['tab-btn', { active: activeTab === tab.id }]"
               @click="activeTab = tab.id"
             >
-              <span class="tab-icon">{{ tab.icon }}</span>
+              <component :is="tab.icon" class="tab-icon" size="20" />
               <span class="tab-text">{{ tab.name }}</span>
             </button>
           </div>
@@ -45,9 +45,21 @@
                 }]"
               >
                 <div class="rank-position">
-                  <span v-if="index < 3" class="position-medal">
-                    {{ ['🥇', '🥈', '🥉'][index] }}
-                  </span>
+                  <Medal 
+                    v-if="index === 0" 
+                    class="position-medal gold" 
+                    size="40"
+                  />
+                  <Award 
+                    v-else-if="index === 1" 
+                    class="position-medal silver" 
+                    size="36"
+                  />
+                  <Award 
+                    v-else-if="index === 2" 
+                    class="position-medal bronze" 
+                    size="36"
+                  />
                   <span v-else class="position-number">{{ index + 1 }}</span>
                 </div>
                 
@@ -58,7 +70,8 @@
                   </div>
                   <div class="rank-meta">
                     <span class="rank-difficulty" :class="player.difficulty">
-                      {{ getDifficultyIcon(player.difficulty) }} {{ getDifficultyName(player.difficulty) }}
+                      <component :is="getDifficultyIcon(player.difficulty)" size="14" />
+                      {{ getDifficultyName(player.difficulty) }}
                     </span>
                     <span class="rank-date">{{ formatDate(player.date) }}</span>
                   </div>
@@ -70,8 +83,8 @@
                     <span class="score-label">pts</span>
                   </div>
                   <div class="stat-details">
-                    <span class="stat-correct">{{ player.correct }}✓</span>
-                    <span class="stat-wrong">{{ player.wrong }}✗</span>
+                    <span class="stat-correct"><Check size="14" /> {{ player.correct }}</span>
+                    <span class="stat-wrong"><X size="14" /> {{ player.wrong }}</span>
                   </div>
                 </div>
               </div>
@@ -79,7 +92,7 @@
 
             <!-- Empty State -->
             <div v-else class="ranking-empty">
-              <div class="empty-icon">📊</div>
+              <BarChart3 class="empty-icon" size="64" />
               <h3>Nenhum registro ainda</h3>
               <p>Seja o primeiro a jogar e aparecer no ranking!</p>
             </div>
@@ -102,35 +115,49 @@
               </div>
             </div>
             <button class="btn-clear-ranking" @click="confirmClear = true" v-if="rankingData.length > 0">
-              🗑️ Limpar Ranking
+              <Trash2 size="16" />
+              Limpar Ranking
             </button>
           </div>
         </div>
       </div>
-      </Transition>
-    </Teleport>
+    </Transition>
+  </Teleport>
 
-    <!-- Modal de Confirmação para Limpar -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="confirmClear" class="confirm-overlay" @click.self="confirmClear = false">
-          <div class="confirm-modal">
-            <div class="confirm-icon">⚠️</div>
-            <h3>Limpar Ranking?</h3>
-            <p>Todos os dados serão perdidos permanentemente.</p>
-            <div class="confirm-buttons">
-              <button class="btn-cancel" @click="confirmClear = false">Cancelar</button>
-              <button class="btn-confirm-delete" @click="clearRanking">Confirmar</button>
-            </div>
+  <!-- Modal de Confirmação para Limpar -->
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-if="confirmClear" class="confirm-overlay" @click.self="confirmClear = false">
+        <div class="confirm-modal">
+          <AlertTriangle class="confirm-icon" size="56" />
+          <h3>Limpar Ranking?</h3>
+          <p>Todos os dados serão perdidos permanentemente.</p>
+          <div class="confirm-buttons">
+            <button class="btn-cancel" @click="confirmClear = false">Cancelar</button>
+            <button class="btn-confirm-delete" @click="clearRanking">Confirmar</button>
           </div>
         </div>
-      </Transition>
-    </Teleport>
-
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { 
+  Trophy, 
+  X, 
+  Globe, 
+  Sprout, 
+  Zap, 
+  Flame, 
+  Medal, 
+  Award, 
+  BarChart3, 
+  Check, 
+  Trash2, 
+  AlertTriangle 
+} from 'lucide-vue-next'
 
 const props = defineProps({
   show: {
@@ -150,10 +177,10 @@ const rankingData = ref([])
 const confirmClear = ref(false)
 
 const tabs = [
-  { id: 'all', name: 'Geral', icon: '🌍' },
-  { id: 'easy', name: 'Fácil', icon: '🌱' },
-  { id: 'medium', name: 'Médio', icon: '⚡' },
-  { id: 'hard', name: 'Difícil', icon: '🔥' }
+  { id: 'all', name: 'Geral', icon: Globe },
+  { id: 'easy', name: 'Fácil', icon: Sprout },
+  { id: 'medium', name: 'Médio', icon: Zap },
+  { id: 'hard', name: 'Difícil', icon: Flame }
 ]
 
 const filteredRanking = computed(() => {
@@ -181,8 +208,8 @@ const loadRanking = () => {
 }
 
 const getDifficultyIcon = (diff) => {
-  const icons = { easy: '🌱', medium: '⚡', hard: '🔥' }
-  return icons[diff] || '❓'
+  const icons = { easy: Sprout, medium: Zap, hard: Flame }
+  return icons[diff] || Globe
 }
 
 const getDifficultyName = (diff) => {
@@ -276,8 +303,8 @@ watch(() => props.show, (newVal) => {
 }
 
 .ranking-icon {
-  font-size: 3rem;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  color: white;
 }
 
 .ranking-title {
@@ -300,7 +327,6 @@ watch(() => props.show, (newVal) => {
   border: none;
   background: rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 1.3rem;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
@@ -352,7 +378,7 @@ watch(() => props.show, (newVal) => {
 }
 
 .tab-icon {
-  font-size: 1.2rem;
+  stroke-width: 2;
 }
 
 /* Content */
@@ -417,9 +443,23 @@ watch(() => props.show, (newVal) => {
 }
 
 .position-medal {
-  font-size: 2.2rem;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
   animation: bounce 2s infinite;
+}
+
+.position-medal.gold {
+  color: #ffd700;
+  stroke-width: 1.5;
+}
+
+.position-medal.silver {
+  color: #a0aec0;
+  stroke-width: 1.5;
+}
+
+.position-medal.bronze {
+  color: #cd7f32;
+  stroke-width: 1.5;
 }
 
 @keyframes bounce {
@@ -532,10 +572,16 @@ watch(() => props.show, (newVal) => {
 
 .stat-correct {
   color: #48bb78;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .stat-wrong {
   color: #f56565;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 /* Empty State */
@@ -545,9 +591,9 @@ watch(() => props.show, (newVal) => {
 }
 
 .empty-icon {
-  font-size: 4rem;
   margin-bottom: 20px;
   opacity: 0.5;
+  color: #718096;
 }
 
 .ranking-empty h3 {
@@ -605,6 +651,9 @@ watch(() => props.show, (newVal) => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-clear-ranking:hover {
@@ -639,8 +688,8 @@ watch(() => props.show, (newVal) => {
 }
 
 .confirm-icon {
-  font-size: 3.5rem;
   margin-bottom: 15px;
+  color: #f56565;
 }
 
 .confirm-modal h3 {
@@ -729,7 +778,8 @@ watch(() => props.show, (newVal) => {
   }
   
   .ranking-icon {
-    font-size: 2.5rem;
+    width: 40px;
+    height: 40px;
   }
   
   .ranking-title {
@@ -746,7 +796,8 @@ watch(() => props.show, (newVal) => {
   }
   
   .tab-icon {
-    font-size: 1rem;
+    width: 18px;
+    height: 18px;
   }
   
   .tab-text {
@@ -768,7 +819,8 @@ watch(() => props.show, (newVal) => {
   }
   
   .position-medal {
-    font-size: 1.8rem;
+    width: 32px;
+    height: 32px;
   }
   
   .position-number {
