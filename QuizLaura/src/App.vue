@@ -5,6 +5,7 @@
   </header>
 
   <RouterView />
+  
 </template>
 
 <style>

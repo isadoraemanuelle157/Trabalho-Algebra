@@ -254,11 +254,11 @@
     </transition>
 
     <!-- MODAL DO RANKING (Componente) -->
-    <Ranking 
-      :show="showRanking" 
-      @close="showRanking = false"
-      :current-player="playerName"
-    />
+    <Ranking
+  :show="showRanking"
+  :currentPlayer="playerName"
+  @close="closeRanking"
+/>
 
     <!-- MODAL DO GABARITO -->
     <Teleport to="body">
@@ -329,6 +329,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 import { 
   Target, Play, Trophy, ArrowLeft, Cog, User, Layers, 
   Check, Timer, ArrowRight, Sigma, Pi, Radical, Infinity, 
@@ -338,6 +340,8 @@ import {
 } from 'lucide-vue-next'
 import Quiz from '../components/Quiz.vue'
 import Ranking from '../components/Ranking.vue'
+
+const ADMIN = 'isamanu15'
 
 const currentScreen = ref('home')
 const playerName = ref('')
@@ -350,7 +354,6 @@ const finalCorrect = ref(0)
 const finalWrong = ref(0)
 const quizHistory = ref([])
 
-// Ícones matemáticos para as formas flutuantes (usando Radical no lugar de SquareRoot)
 const mathIcons = [Plus, Minus, X, Divide, Radical, Pi]
 
 const difficulties = [
@@ -402,6 +405,10 @@ const resultMessage = computed(() => {
   return "Continue estudando! A prática leva à perfeição! "
 })
 
+const isAdminUser = (name) => {
+  return name.trim().toLowerCase() === ADMIN.toLowerCase()
+}
+
 const goToHome = () => {
   currentScreen.value = 'home'
   resetSetup()
@@ -411,9 +418,68 @@ const goToSetup = () => {
   currentScreen.value = 'setup'
 }
 
-const startQuiz = () => {
-  if (!playerName.value.trim()) return
-  currentScreen.value = 'quiz'
+const startQuiz = async () => {
+  const name = playerName.value.trim()
+
+  if (!name) {
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Nome obrigatório',
+      text: 'Digite seu nome para continuar.',
+      confirmButtonColor: '#ed8936',
+      confirmButtonText: 'Entendi',
+      background: '#1a1a2e',
+      color: '#fff'
+    })
+    return
+  }
+
+  playerName.value = name
+
+  // ✅ admin vai direto para o ranking
+  if (isAdminUser(name)) {
+    showRanking.value = true
+    return
+  }
+
+  try {
+    const res = await fetch(`http://localhost:3002/ranking/check-name?name=${encodeURIComponent(name)}`)
+    const data = await res.json()
+
+    if (data.exists) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Nome em uso',
+        text: 'Esse nome já está em uso. Escolha outro.',
+        confirmButtonColor: '#f56565',
+        confirmButtonText: 'OK',
+        background: '#1a1a2e',
+        color: '#fff'
+      })
+      return
+    }
+
+    currentScreen.value = 'quiz'
+  } catch (err) {
+    console.error('Erro ao verificar nome:', err)
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro de conexão',
+      text: 'Erro ao verificar nome. Tente novamente.',
+      confirmButtonColor: '#f56565',
+      confirmButtonText: 'Tentar novamente',
+      background: '#1a1a2e',
+      color: '#fff'
+    })
+  }
+}
+
+const closeRanking = () => {
+  showRanking.value = false
+
+  if (isAdminUser(playerName.value)) {
+    currentScreen.value = 'home'
+  }
 }
 
 const resetSetup = () => {
@@ -429,32 +495,16 @@ const handleQuizFinish = (results) => {
   finalScore.value = results.score
   finalCorrect.value = results.correct
   finalWrong.value = results.wrong
-  quizHistory.value = results.history
-  
-  saveToRanking(results)
-  currentScreen.value = 'results'
-}
+  quizHistory.value = results.history || []
 
-const saveToRanking = (results) => {
-  const rankingData = JSON.parse(localStorage.getItem('quizRanking') || '[]')
-  const newEntry = {
-    name: playerName.value,
-    score: results.score,
-    correct: results.correct,
-    wrong: results.wrong,
-    difficulty: selectedDifficulty.value,
-    date: new Date().toISOString()
-  }
-  rankingData.push(newEntry)
-  rankingData.sort((a, b) => b.score - a.score)
-  const top50 = rankingData.slice(0, 50)
-  localStorage.setItem('quizRanking', JSON.stringify(top50))
+  currentScreen.value = 'results'
 }
 
 const restartQuiz = () => {
   currentScreen.value = 'quiz'
 }
 </script>
+
 
 <style scoped>
 /* Logo Image - Estilo ícone circular */
@@ -1742,7 +1792,7 @@ const restartQuiz = () => {
   }
 
   .setup-form-wrapper {
-    padding: 10px; /* tira aquele “respiro” lateral */
+    padding: 10px; /* tira aquele "respiro" lateral */
     justify-content: flex-start; /* empurra pro lado */
   }
 

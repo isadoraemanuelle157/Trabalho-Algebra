@@ -41,7 +41,7 @@
                   'top-1': index === 0, 
                   'top-2': index === 1, 
                   'top-3': index === 2,
-                  'is-current': player.name === currentPlayer && player.date === filteredRanking.find(p => p.name === currentPlayer)?.date
+                 'is-current': player.name === props.currentPlayer && player.date === filteredRanking.find(p => p.name === props.currentPlayer)?.date
                 }]"
               >
                 <div class="rank-position">
@@ -66,14 +66,14 @@
                 <div class="rank-info">
                   <div class="rank-name-section">
                     <span class="rank-name">{{ player.name }}</span>
-                    <span v-if="player.name === currentPlayer" class="current-badge">VOCÊ</span>
+                   <span v-if="player.name === props.currentPlayer" class="current-badge">VOCÊ</span>
                   </div>
                   <div class="rank-meta">
                     <span class="rank-difficulty" :class="player.difficulty">
                       <component :is="getDifficultyIcon(player.difficulty)" size="14" />
                       {{ getDifficultyName(player.difficulty) }}
                     </span>
-                    <span class="rank-date">{{ formatDate(player.date) }}</span>
+                    <span class="rank-date">{{ formatDate(player.createdAt) }}</span>
                   </div>
                 </div>
 
@@ -114,7 +114,12 @@
                 <span class="summary-label">Recorde</span>
               </div>
             </div>
-            <button class="btn-clear-ranking" @click="confirmClear = true" v-if="rankingData.length > 0">
+            <button 
+  class="btn-clear-ranking"
+  @click="confirmClear = true"
+v-if="rankingData.length > 0 && props.currentPlayer === ADMIN"
+
+>
               <Trash2 size="16" />
               Limpar Ranking
             </button>
@@ -170,6 +175,8 @@ const props = defineProps({
   }
 })
 
+const ADMIN = 'isamanu15'
+
 const emit = defineEmits(['close'])
 
 const activeTab = ref('all')
@@ -202,9 +209,15 @@ const bestScore = computed(() => {
   return Math.max(...rankingData.value.map(p => p.score))
 })
 
-const loadRanking = () => {
-  const data = JSON.parse(localStorage.getItem('quizRanking') || '[]')
-  rankingData.value = data
+const loadRanking = async () => {
+  try {
+    const res = await fetch('http://localhost:3002/ranking')
+    const data = await res.json()
+
+    rankingData.value = data
+  } catch (err) {
+    console.error('Erro ao carregar ranking:', err)
+  }
 }
 
 const getDifficultyIcon = (diff) => {
@@ -218,9 +231,17 @@ const getDifficultyName = (diff) => {
 }
 
 const formatDate = (dateString) => {
+  if (!dateString) return 'Sem data'
+
   const date = new Date(dateString)
-  return date.toLocaleDateString('pt-BR', { 
-    day: '2-digit', 
+
+  if (isNaN(date.getTime())) {
+    console.log('Data inválida recebida:', dateString)
+    return 'Data inválida'
+  }
+
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
     minute: '2-digit'
@@ -231,10 +252,22 @@ const closeModal = () => {
   emit('close')
 }
 
-const clearRanking = () => {
-  localStorage.removeItem('quizRanking')
-  rankingData.value = []
-  confirmClear.value = false
+const clearRanking = async () => {
+  try {
+    await fetch('http://localhost:3002/ranking', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'user': props.currentPlayer // ✅ AGORA VAI PRO HEADER
+      }
+    })
+
+    rankingData.value = []
+    confirmClear.value = false
+
+  } catch (err) {
+    console.error('Erro ao limpar ranking:', err)
+  }
 }
 
 onMounted(() => {

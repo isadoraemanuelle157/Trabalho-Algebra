@@ -125,6 +125,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 const props = defineProps({
   playerName: {
@@ -142,6 +144,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['finish', 'exit'])
+
+const ADMIN = 'isamanu15'
 
 // Estado
 const currentQuestionIndex = ref(0)
@@ -323,15 +327,67 @@ const resetQuestion = () => {
   timeExpired.value = false
 }
 
-const finishQuiz = () => {
+const finishQuiz = async () => {
   stopTimer()
-  emit('finish', {
+
+  const result = {
+    name: props.playerName,
     score: score.value,
     correct: correctAnswers.value,
     wrong: wrongAnswers.value,
-    history: quizHistory.value
-  })
+    difficulty: props.difficulty
+  }
+
+  try {
+    const res = await fetch('http://localhost:3002/ranking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(result)
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Ops!',
+        text: data.message || 'Erro ao salvar ranking.',
+        confirmButtonColor: '#f56565',
+        confirmButtonText: 'OK',
+        background: '#1a1a2e',
+        color: '#fff'
+      })
+      return
+    }
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Sucesso!',
+      text: data.message || 'Pontuação salva com sucesso!',
+      confirmButtonColor: '#48bb78',
+      confirmButtonText: 'Ótimo!',
+      background: '#1a1a2e',
+      color: '#fff',
+      timer: 3000,
+      timerProgressBar: true
+    })
+    
+    emit('finish', result)
+
+  } catch (err) {
+    console.error('Erro ao salvar ranking:', err)
+    await Swal.fire({
+      icon: 'error',
+      title: 'Erro de Conexão',
+      text: 'Erro ao conectar com o servidor.',
+      confirmButtonColor: '#f56565',
+      confirmButtonText: 'Entendi',
+      background: '#1a1a2e',
+      color: '#fff'
+    })
+  }
 }
+
 
 const confirmExit = () => {
   stopTimer()
@@ -1007,7 +1063,7 @@ const exitQuiz = () => {
 
 @media (max-width: 480px) {
     .modal-content {
-    transform: translateX(-7px);
+    transform: translateX(-6px);
     margin: 0;              /* remove centralização problemática */
     width: 100%;
     max-width: 100%;
