@@ -443,7 +443,7 @@ const startQuiz = async () => {
   }
 
   try {
-    const res = await fetch(`http://localhost:3002/ranking/check-name?name=${encodeURIComponent(name)}`)
+    const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/check-name?name=${encodeURIComponent(name)}`)
     const data = await res.json()
 
     if (data.exists) {

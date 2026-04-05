@@ -211,7 +211,7 @@ const bestScore = computed(() => {
 
 const loadRanking = async () => {
   try {
-    const res = await fetch('http://localhost:3002/ranking')
+    const res = await fetch('https://quiz-backend-4c5y.onrender.com/ranking')
     const data = await res.json()
 
     rankingData.value = data
@@ -254,7 +254,7 @@ const closeModal = () => {
 
 const clearRanking = async () => {
   try {
-    await fetch('http://localhost:3002/ranking', {
+    await fetch('https://quiz-backend-4c5y.onrender.com/ranking', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
