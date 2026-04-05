@@ -767,12 +767,31 @@ watch(() => props.show, (newVal) => {
 }
 
 /* Responsive */
-@media (max-width: 640px) {
-  .ranking-modal {
-    max-height: 95vh;
-    border-radius: 20px;
+@media (max-width: 670px) {
+  .ranking-overlay {
+     box-sizing: border-box;
+    padding: 5px 0px; /* reduz o espaço lateral */
+    justify-content: flex-start; /* empurra tudo pra esquerda */
   }
-  
+
+  .ranking-modal {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+    .confirm-overlay {
+       box-sizing: border-box;
+    padding: 10px 0px; /* reduz espaço lateral desigual */
+    justify-content: center; /* garante centralização real */
+    align-items: center;
+  }
+
+  .confirm-modal {
+    width: 100%;
+    max-width: 95%;
+    margin: 0 auto; /* força centralização */
+    padding: 25px 20px; /* reduz padding interno (fica melhor no mobile) */
+  }
   .ranking-header {
     padding: 20px;
   }

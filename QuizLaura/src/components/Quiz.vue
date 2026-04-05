@@ -1006,11 +1006,30 @@ const exitQuiz = () => {
 }
 
 @media (max-width: 480px) {
-  .quiz-card {
-    margin: 10px;
-    padding: 20px;
+    .modal-content {
+    transform: translateX(-7px);
+    margin: 0;              /* remove centralização problemática */
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 12px;    /* menos espaço lateral */
+    border-radius: 12px;
+    box-sizing: border-box;
   }
-  
+
+  .modal-overlay {
+  box-sizing: border-box;
+    margin: 6px 0 5px 2px; /* tira o auto e joga pra esquerda */
+    max-width: 95%; 
+  }
+   .quiz-card {
+      box-sizing: border-box;
+    margin: 3px 0 2px 10px; /* tira o auto e joga pra esquerda */
+    max-width: 95%; /* evita estourar a tela */
+  }
+
+  .quiz-view {
+    align-items: flex-start; /* garante alinhamento à esquerda */
+  }
   .feedback-header {
     padding: 12px 16px;
     font-size: 1rem;

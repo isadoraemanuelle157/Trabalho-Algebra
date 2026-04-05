@@ -1723,6 +1723,35 @@ const restartQuiz = () => {
 }
 
 @media (max-width: 640px) {
+   .modal-content {
+    margin: 0;              /* remove centralização problemática */
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 12px;    /* menos espaço lateral */
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+
+  .modal-overlay {
+  box-sizing: border-box;
+    margin: 3px 0 2px 10px; /* tira o auto e joga pra esquerda */
+    max-width: 95%; 
+  }
+  .screen {
+    padding: 10px 8px; /* diminui espaço lateral */
+  }
+
+  .setup-form-wrapper {
+    padding: 10px; /* tira aquele “respiro” lateral */
+    justify-content: flex-start; /* empurra pro lado */
+  }
+
+  .setup-form {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px; /* opcional: fica melhor no mobile */
+  }
   .app-title {
     font-size: 3rem;
   }
