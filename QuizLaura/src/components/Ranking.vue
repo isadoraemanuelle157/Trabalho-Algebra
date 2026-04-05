@@ -245,13 +245,25 @@ const deletePlayer = async (id) => {
       return
     }
 
+    // Exibe o SweetAlert após a exclusão bem-sucedida
+    await Swal.fire({
+      icon: 'success',
+      title: 'Usuário Removido',
+      text: 'O jogador foi removido do ranking!',
+      confirmButtonColor: '#48bb78', // Cor do botão
+      confirmButtonText: 'Ótimo!',
+      background: '#1a1a2e',
+      color: '#fff'
+    })
+
     console.log('Deletado com sucesso:', data)
 
-    loadRanking()
+    loadRanking()  // Atualiza o ranking
   } catch (err) {
     console.error('Erro ao deletar:', err)
   }
 }
+
 
 
 const getDifficultyIcon = (diff) => {
