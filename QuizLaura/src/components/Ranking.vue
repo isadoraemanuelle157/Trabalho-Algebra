@@ -156,6 +156,8 @@ v-if="rankingData.length > 0 && props.currentPlayer === ADMIN"
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 import { 
   Trophy, 
   X, 
