@@ -230,43 +230,58 @@ const loadRanking = async () => {
 }
 
 const deletePlayer = async (id) => {
-  try {
-    const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'user': props.currentPlayer
+  // Mostra o alerta de confirmação
+  const result = await Swal.fire({
+    title: 'Você tem certeza?',
+    text: 'Esta ação não pode ser desfeita!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#f56565',
+    cancelButtonColor: '#ddd',
+    confirmButtonText: 'Sim, excluir!',
+    cancelButtonText: 'Cancelar',
+    target: document.querySelector('.ranking-modal'), 
+    backdrop: false
+  });
+
+  // Se o usuário confirmar, realiza a exclusão
+  if (result.isConfirmed) {
+    try {
+      const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'user': props.currentPlayer
+        }
+      })
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error('Erro backend:', data);
+        alert(data.error || 'Erro ao deletar');
+        return;
       }
-    })
 
-    const data = await res.json()
+      // Alerta de sucesso após a exclusão
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuário Removido',
+        text: 'O jogador foi removido do ranking!',
+        confirmButtonColor: '#48bb78',
+        confirmButtonText: 'Ótimo!',
+        background: '#1a1a2e',
+        color: '#fff',
+        target: document.querySelector('.ranking-modal'),
+        backdrop: false
+      })
 
-    if (!res.ok) {
-      console.error('Erro backend:', data)
-      alert(data.error || 'Erro ao deletar')
-      return
+      loadRanking();  // Atualiza o ranking após a exclusão
+    } catch (err) {
+      console.error('Erro ao deletar:', err);
     }
-
-    // Exibe o SweetAlert após a exclusão bem-sucedida
-    await Swal.fire({
-      icon: 'success',
-      title: 'Usuário Removido',
-      text: 'O jogador foi removido do ranking!',
-      confirmButtonColor: '#48bb78', // Cor do botão
-      confirmButtonText: 'Ótimo!',
-      background: '#1a1a2e',
-      color: '#fff'
-    })
-
-    console.log('Deletado com sucesso:', data)
-
-    loadRanking()  // Atualiza o ranking
-  } catch (err) {
-    console.error('Erro ao deletar:', err)
   }
 }
-
-
 
 const getDifficultyIcon = (diff) => {
   const icons = { easy: Sprout, medium: Zap, hard: Flame }
