@@ -36,7 +36,7 @@
             <div v-if="filteredRanking.length > 0" class="ranking-list">
               <div 
                 v-for="(player, index) in filteredRanking" 
-                :key="index"
+                :key="player._id"
                 :class="['ranking-item', { 
                   'top-1': index === 0, 
                   'top-2': index === 1, 
@@ -85,6 +85,13 @@
                   <div class="stat-details">
                     <span class="stat-correct"><Check size="14" /> {{ player.correct }}</span>
                     <span class="stat-wrong"><X size="14" /> {{ player.wrong }}</span>
+                          <button 
+    v-if="props.currentPlayer === ADMIN"
+    @click="deletePlayer(player._id)"
+    class="btn-delete-player"
+  >
+    <Trash2 size="16" />
+  </button>
                   </div>
                 </div>
               </div>
@@ -220,6 +227,33 @@ const loadRanking = async () => {
   }
 }
 
+const deletePlayer = async (id) => {
+  try {
+    const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'user': props.currentPlayer
+      }
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      console.error('Erro backend:', data)
+      alert(data.error || 'Erro ao deletar')
+      return
+    }
+
+    console.log('Deletado com sucesso:', data)
+
+    loadRanking()
+  } catch (err) {
+    console.error('Erro ao deletar:', err)
+  }
+}
+
+
 const getDifficultyIcon = (diff) => {
   const icons = { easy: Sprout, medium: Zap, hard: Flame }
   return icons[diff] || Globe
@@ -317,6 +351,27 @@ watch(() => props.show, (newVal) => {
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(50px) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.btn-delete-player {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff4d4f;
+  border: none;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  color: white;
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.ranking-item {
+  position: relative;
+}
+
+.ranking-item:hover .btn-delete-player {
+  opacity: 1;
 }
 
 /* Header */

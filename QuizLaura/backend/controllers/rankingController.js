@@ -60,9 +60,27 @@ const clear = async (req, res) => {
   }
 }
 
+const deleteOne = async (req, res) => {
+  try {
+    const user = req.headers['user']
+    console.log('USER RECEBIDO:', user) // 👈 adiciona isso
+
+    const { id } = req.params
+
+    await service.deleteOne(id, user)
+
+    res.json({ message: 'Usuário removido do ranking 🗑️' })
+  } catch (err) {
+    res.status(403).json({ error: err.message })
+  }
+}
+
+
+
 module.exports = {
   create,
   getAll,
   clear,
-   checkName 
+  checkName,
+  deleteOne 
 }

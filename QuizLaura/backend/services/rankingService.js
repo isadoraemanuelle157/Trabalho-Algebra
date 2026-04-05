@@ -52,9 +52,20 @@ const clearRanking = async (user) => {
   return await Ranking.deleteMany()
 }
 
+const deleteOne = async (id, user) => {
+  const ADMIN = process.env.ADMIN_USER
+
+  if (user?.trim().toLowerCase() !== ADMIN.trim().toLowerCase()) {
+    throw new Error('Sem permissão')
+  }
+
+  return await Ranking.findByIdAndDelete(id)
+}
+
 module.exports = {
   createRanking,
   getRanking,
   clearRanking,
-  checkNameExists
+  checkNameExists,
+  deleteOne
 }

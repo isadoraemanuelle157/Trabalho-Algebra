@@ -11,6 +11,8 @@ router.get('/', controller.getAll)
 // limpar ranking (admin)
 router.delete('/', controller.clear)
 
+router.delete('/:id', controller.deleteOne)
+
 router.get('/check-name', controller.checkName)
 
 
