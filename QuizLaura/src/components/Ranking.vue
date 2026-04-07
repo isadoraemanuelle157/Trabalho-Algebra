@@ -2,7 +2,8 @@
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="show" class="ranking-overlay" @click.self="closeModal">
-        <div class="ranking-modal">
+        <div class="ranking-modal" :class="{ 'gabarito-active': showAdminGabarito }">
+          
           <!-- Header -->
           <div class="ranking-header">
             <div class="ranking-title-section">
@@ -41,7 +42,7 @@
                   'top-1': index === 0, 
                   'top-2': index === 1, 
                   'top-3': index === 2,
-                 'is-current': player.name === props.currentPlayer && player.date === filteredRanking.find(p => p.name === props.currentPlayer)?.date
+                  'is-current': player.name === props.currentPlayer && player.date === filteredRanking.find(p => p.name === props.currentPlayer)?.date
                 }]"
               >
                 <div class="rank-position">
@@ -66,7 +67,7 @@
                 <div class="rank-info">
                   <div class="rank-name-section">
                     <span class="rank-name">{{ player.name }}</span>
-                   <span v-if="player.name === props.currentPlayer" class="current-badge">VOCÊ</span>
+                    <span v-if="player.name === props.currentPlayer" class="current-badge">VOCÊ</span>
                   </div>
                   <div class="rank-meta">
                     <span class="rank-difficulty" :class="player.difficulty">
@@ -85,13 +86,13 @@
                   <div class="stat-details">
                     <span class="stat-correct"><Check size="14" /> {{ player.correct }}</span>
                     <span class="stat-wrong"><X size="14" /> {{ player.wrong }}</span>
-                          <button 
-    v-if="props.currentPlayer === ADMIN"
-    @click="deletePlayer(player._id)"
-    class="btn-delete-player"
-  >
-    <Trash2 size="16" />
-  </button>
+                    <button 
+                      v-if="props.currentPlayer === ADMIN"
+                      @click="deletePlayer(player._id)"
+                      class="btn-delete-player"
+                    >
+                      <Trash2 size="16" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -121,16 +122,77 @@
                 <span class="summary-label">Recorde</span>
               </div>
             </div>
-            <button 
-  class="btn-clear-ranking"
-  @click="confirmClear = true"
-v-if="rankingData.length > 0 && props.currentPlayer === ADMIN"
+            
+            <div v-if="rankingData.length > 0 && props.currentPlayer === ADMIN" class="admin-actions">
+              <button 
+                class="btn-gabarito-admin"
+                @click="showAdminGabarito = true"
+              >
+                <Check size="16" />
+                Gabarito
+              </button>
 
->
-              <Trash2 size="16" />
-              Limpar Ranking
-            </button>
+              <button 
+                class="btn-clear-ranking"
+                @click="confirmClear = true"
+              >
+                <Trash2 size="16" />
+                Limpar Ranking
+              </button>
+            </div>
           </div>
+
+          <!-- Gabarito Modal Interno -->
+          <Transition name="gabarito-slide">
+            <div v-if="showAdminGabarito" class="gabarito-panel">
+              <div class="gabarito-header">
+                <div class="gabarito-title-section">
+                  <div class="gabarito-icon-wrapper">
+                    <Check size="32" />
+                  </div>
+                  <div>
+                    <h3 class="gabarito-title">Gabarito Oficial</h3>
+                    <p class="gabarito-subtitle">Respostas corretas do quiz</p>
+                  </div>
+                </div>
+                <button class="btn-close-gabarito" @click="showAdminGabarito = false">
+                  <X size="24" />
+                </button>
+              </div>
+
+              <div class="gabarito-content">
+                <div class="gabarito-list">
+                  <div 
+                    v-for="item in adminGabarito" 
+                    :key="item.n"
+                    class="gabarito-item"
+                    :class="{ 'highlight': item.n <= 4 }"
+                  >
+                    <div class="gabarito-number">
+                      <span class="question-num">{{ item.n }}</span>
+                    </div>
+                    <div class="gabarito-details">
+                      <div class="gabarito-answer">
+                        <span class="answer-letter">{{ item.correct }}</span>
+                        <span class="answer-text">{{ item.text }}</span>
+                      </div>
+                      <div class="gabarito-type">
+                        {{ item.n <= 4 ? 'Progressão Aritmética' : 'Função Afim' }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gabarito-footer">
+                <button class="btn-back-to-ranking" @click="showAdminGabarito = false">
+                  <ArrowLeft size="18" />
+                  Voltar ao Ranking
+                </button>
+              </div>
+            </div>
+          </Transition>
+
         </div>
       </div>
     </Transition>
@@ -170,7 +232,8 @@ import {
   BarChart3, 
   Check, 
   Trash2, 
-  AlertTriangle 
+  AlertTriangle,
+  ArrowLeft
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -191,6 +254,7 @@ const emit = defineEmits(['close'])
 const activeTab = ref('all')
 const rankingData = ref([])
 const confirmClear = ref(false)
+const showAdminGabarito = ref(false)
 
 const tabs = [
   { id: 'all', name: 'Geral', icon: Globe },
@@ -222,15 +286,24 @@ const loadRanking = async () => {
   try {
     const res = await fetch('https://quiz-backend-4c5y.onrender.com/ranking')
     const data = await res.json()
-
     rankingData.value = data
   } catch (err) {
     console.error('Erro ao carregar ranking:', err)
   }
 }
 
+const adminGabarito = [
+  { n: 1, correct: "A", text: "20 músicas" },
+  { n: 2, correct: "B", text: "f(x) = 2x + 5" },
+  { n: 3, correct: "C", text: "38 cm" },
+  { n: 4, correct: "D", text: "13" },
+  { n: 5, correct: "D", text: "R$ 20" },
+  { n: 6, correct: "A", text: "R$ 30" },
+  { n: 7, correct: "D", text: "40" },
+  { n: 8, correct: "B", text: "R$ 20" }
+]
+
 const deletePlayer = async (id) => {
-  // Mostra o alerta de confirmação
   const result = await Swal.fire({
     title: 'Você tem certeza?',
     text: 'Esta ação não pode ser desfeita!',
@@ -242,9 +315,8 @@ const deletePlayer = async (id) => {
     cancelButtonText: 'Cancelar',
     target: document.querySelector('.ranking-modal'), 
     backdrop: false
-  });
+  })
 
-  // Se o usuário confirmar, realiza a exclusão
   if (result.isConfirmed) {
     try {
       const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/${id}`, {
@@ -255,15 +327,14 @@ const deletePlayer = async (id) => {
         }
       })
 
-      const data = await res.json();
+      const data = await res.json()
 
       if (!res.ok) {
-        console.error('Erro backend:', data);
-        alert(data.error || 'Erro ao deletar');
-        return;
+        console.error('Erro backend:', data)
+        alert(data.error || 'Erro ao deletar')
+        return
       }
 
-      // Alerta de sucesso após a exclusão
       Swal.fire({
         icon: 'success',
         title: 'Usuário Removido',
@@ -276,9 +347,9 @@ const deletePlayer = async (id) => {
         backdrop: false
       })
 
-      loadRanking();  // Atualiza o ranking após a exclusão
+      loadRanking()
     } catch (err) {
-      console.error('Erro ao deletar:', err);
+      console.error('Erro ao deletar:', err)
     }
   }
 }
@@ -295,14 +366,11 @@ const getDifficultyName = (diff) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Sem data'
-
   const date = new Date(dateString)
-
   if (isNaN(date.getTime())) {
     console.log('Data inválida recebida:', dateString)
     return 'Data inválida'
   }
-
   return date.toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -312,6 +380,7 @@ const formatDate = (dateString) => {
 }
 
 const closeModal = () => {
+  showAdminGabarito.value = false
   emit('close')
 }
 
@@ -321,7 +390,7 @@ const clearRanking = async () => {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'user': props.currentPlayer // ✅ AGORA VAI PRO HEADER
+        'user': props.currentPlayer
       }
     })
 
@@ -338,11 +407,38 @@ onMounted(() => {
 })
 
 watch(() => props.show, (newVal) => {
-  if (newVal) loadRanking()
+  if (newVal) {
+    loadRanking()
+    showAdminGabarito.value = false
+  }
 })
 </script>
 
 <style scoped>
+.admin-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-gabarito-admin {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-gabarito-admin:hover {
+  background: #2c5282;
+  transform: translateY(-2px);
+}
+
 .ranking-overlay {
   position: fixed;
   top: 0;
@@ -375,12 +471,14 @@ watch(() => props.show, (newVal) => {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
+  position: relative;
 }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(50px) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
 .btn-delete-player {
   position: absolute;
   top: 10px;
@@ -778,6 +876,220 @@ watch(() => props.show, (newVal) => {
   color: white;
 }
 
+/* Gabarito Panel - Modal Interno */
+.gabarito-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+}
+
+.gabarito-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+}
+
+.gabarito-title-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.gabarito-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.gabarito-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0;
+  margin-bottom: 5px;
+}
+
+.gabarito-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.btn-close-gabarito {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-gabarito:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.gabarito-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px 30px;
+  background: #f8f9fa;
+}
+
+.gabarito-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.gabarito-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.gabarito-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.gabarito-item.highlight {
+  border-color: #48bb78;
+  background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+}
+
+.gabarito-number {
+  flex-shrink: 0;
+}
+
+.question-num {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.gabarito-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.gabarito-answer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.answer-letter {
+  width: 32px;
+  height: 32px;
+  background: #48bb78;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.answer-text {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gabarito-type {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 42px;
+}
+
+.gabarito-footer {
+  padding: 20px 30px;
+  background: white;
+  border-top: 2px solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-back-to-ranking {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-back-to-ranking:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Gabarito Slide Animation */
+.gabarito-slide-enter-active,
+.gabarito-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gabarito-slide-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.gabarito-slide-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
 /* Confirm Modal */
 .confirm-overlay {
   position: fixed;
@@ -802,6 +1114,11 @@ watch(() => props.show, (newVal) => {
   max-width: 400px;
   width: 100%;
   animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .confirm-icon {
@@ -865,30 +1182,34 @@ watch(() => props.show, (newVal) => {
 }
 
 /* Scrollbar */
-.ranking-content::-webkit-scrollbar {
+.ranking-content::-webkit-scrollbar,
+.gabarito-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.ranking-content::-webkit-scrollbar-track {
+.ranking-content::-webkit-scrollbar-track,
+.gabarito-content::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
-.ranking-content::-webkit-scrollbar-thumb {
+.ranking-content::-webkit-scrollbar-thumb,
+.gabarito-content::-webkit-scrollbar-thumb {
   background: #cbd5e0;
   border-radius: 4px;
 }
 
-.ranking-content::-webkit-scrollbar-thumb:hover {
+.ranking-content::-webkit-scrollbar-thumb:hover,
+.gabarito-content::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
 }
 
 /* Responsive */
 @media (max-width: 670px) {
   .ranking-overlay {
-     box-sizing: border-box;
-    padding: 5px 0px; /* reduz o espaço lateral */
-    justify-content: flex-start; /* empurra tudo pra esquerda */
+    box-sizing: border-box;
+    padding: 5px 0px;
+    justify-content: flex-start;
   }
 
   .ranking-modal {
@@ -896,20 +1217,23 @@ watch(() => props.show, (newVal) => {
     width: 100%;
     max-width: 100%;
   }
-    .confirm-overlay {
-       box-sizing: border-box;
-    padding: 10px 0px; /* reduz espaço lateral desigual */
-    justify-content: center; /* garante centralização real */
+  
+  .confirm-overlay {
+    box-sizing: border-box;
+    padding: 10px 0px;
+    justify-content: center;
     align-items: center;
   }
 
   .confirm-modal {
     width: 100%;
     max-width: 95%;
-    margin: 0 auto; /* força centralização */
-    padding: 25px 20px; /* reduz padding interno (fica melhor no mobile) */
+    margin: 0 auto;
+    padding: 25px 20px;
   }
-  .ranking-header {
+  
+  .ranking-header,
+  .gabarito-header {
     padding: 20px;
   }
   
@@ -918,7 +1242,8 @@ watch(() => props.show, (newVal) => {
     height: 40px;
   }
   
-  .ranking-title {
+  .ranking-title,
+  .gabarito-title {
     font-size: 1.4rem;
   }
   
@@ -940,8 +1265,13 @@ watch(() => props.show, (newVal) => {
     display: none;
   }
   
-  .ranking-content {
+  .ranking-content,
+  .gabarito-content {
     padding: 15px;
+  }
+  
+  .gabarito-list {
+    grid-template-columns: 1fr;
   }
   
   .ranking-item {
@@ -979,7 +1309,8 @@ watch(() => props.show, (newVal) => {
     font-size: 1.5rem;
   }
   
-  .ranking-footer {
+  .ranking-footer,
+  .gabarito-footer {
     flex-direction: column;
     padding: 20px;
     gap: 15px;
@@ -988,6 +1319,16 @@ watch(() => props.show, (newVal) => {
   .ranking-stats-summary {
     width: 100%;
     justify-content: space-around;
+  }
+  
+  .admin-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .gabarito-icon-wrapper {
+    width: 48px;
+    height: 48px;
   }
 }
 </style>
