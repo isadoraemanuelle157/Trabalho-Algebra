@@ -26,7 +26,7 @@
     </div>
 
     <!-- Quiz Card -->
-    <div class="quiz-card">
+    <div class="quiz-card"  v-if="currentQuestion">
       <div class="progress-container">
         <div class="progress-bar">
           <div 
@@ -85,7 +85,7 @@
             
             <div class="justification-box">
               <span class="justification-label">💡 Explicação:</span>
-              <p class="justification-text">{{ currentQuestion.justification }}</p>
+            <p class="justification-text" v-html="currentQuestion.justification"></p>
             </div>
           </div>
         </div>
@@ -129,18 +129,10 @@ import Swal from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
 const props = defineProps({
-  playerName: {
-    type: String,
-    required: true
-  },
-  difficulty: {
-    type: String,
-    required: true
-  },
-  difficultyConfig: {
-    type: Object,
-    required: true
-  }
+  playerName: String,
+  difficulty: String,
+  difficultyConfig: Object,
+  shuffle: Boolean // 👈 NOVO
 })
 
 const emit = defineEmits(['finish', 'exit'])
@@ -164,77 +156,72 @@ const timeLeft = ref(0)
 const timeExpired = ref(false)
 let timerInterval = null
 
-// Questões com justificativas
-const questions = [
-  {
-    question: "Quanto é <span class='math-expr'>12 × 8</span>?",
-    options: { a: "84", b: "96", c: "108", d: "72" },
-    correct: "b",
-    justification: "Para multiplicar 12 × 8, podemos fazer (10 × 8) + (2 × 8) = 80 + 16 = 96. Ou simplesmente decorar a tabuada: 12 × 8 = 96."
-  },
-  {
-    question: "Se <span class='math-expr'>x + 5 = 12</span>, qual o valor de x?",
-    options: { a: "5", b: "6", c: "7", d: "8" },
-    correct: "c",
-    justification: "Para isolar o x, subtraímos 5 dos dois lados da equação: x = 12 - 5 = 7. Portanto, x = 7."
-  },
-  {
-    question: "Qual é a raiz quadrada de <span class='math-expr'>144</span>?",
-    options: { a: "10", b: "11", c: "12", d: "14" },
-    correct: "c",
-    justification: "A raiz quadrada de 144 é 12 porque 12 × 12 = 144. É um número quadrado perfeito."
-  },
-  {
-    question: "Quanto é <span class='math-expr'>25% de 200</span>?",
-    options: { a: "25", b: "50", c: "75", d: "100" },
-    correct: "b",
-    justification: "25% equivale a 1/4 ou 0,25. Então 25% de 200 = 0,25 × 200 = 50. Ou 200 ÷ 4 = 50."
-  },
-  {
-    question: "Qual é o próximo número: <span class='math-expr'>2, 6, 12, 20, ...</span>?",
-    options: { a: "28", b: "30", c: "32", d: "36" },
-    correct: "b",
-    justification: "A sequência segue o padrão: n(n+1). Ou seja: 1×2=2, 2×3=6, 3×4=12, 4×5=20, 5×6=30. O próximo é 30."
-  },
-  {
-    question: "Triângulo com ângulos <span class='math-expr'>45°</span> e <span class='math-expr'>45°</span>, o terceiro é?",
-    options: { a: "45°", b: "60°", c: "90°", d: "100°" },
-    correct: "c",
-    justification: "A soma dos ângulos internos de um triângulo é sempre 180°. Então: 180° - 45° - 45° = 90°. É um triângulo retângulo isósceles."
-  },
-  {
-    question: "Quanto é <span class='math-expr'>3² + 4²</span>?",
-    options: { a: "16", b: "25", c: "36", d: "49" },
-    correct: "b",
-    justification: "3² = 9 e 4² = 16. Então 9 + 16 = 25. Este é o famoso triplo pitagórico (3, 4, 5), pois 3² + 4² = 5²."
-  },
-  {
-    question: "Qual é o valor de <span class='math-expr'>log₁₀(100)</span>?",
-    options: { a: "1", b: "2", c: "10", d: "100" },
-    correct: "b",
-    justification: "log₁₀(100) pergunta: 10 elevado a qual número dá 100? Como 10² = 100, a resposta é 2."
-  },
-  {
-    question: "Se <span class='math-expr'>f(x) = 2x + 3</span>, qual <span class='math-expr'>f(4)</span>?",
-    options: { a: "8", b: "9", c: "10", d: "11" },
-    correct: "d",
-    justification: "Substituímos x por 4 na função: f(4) = 2(4) + 3 = 8 + 3 = 11."
-  },
-  {
-    question: "Área do círculo com <span class='math-expr'>r = 3</span> (π = 3,14)?",
-    options: { a: "18,84", b: "28,26", c: "31,42", d: "37,68" },
-    correct: "b",
-    justification: "Fórmula da área: A = π × r². Então A = 3,14 × 3² = 3,14 × 9 = 28,26. Não confundir com o perímetro (2πr)!"
-  }
-]
+const questions = ref([])
 
+// Questões com justificativas
+const originalQuestions = [ 
+  {
+    question: "Uma playlist começa com <span class='math-expr'>5 músicas</span> e a cada dia recebe mais 3 músicas que no dia anterior. Quantas músicas são adicionadas no <span class='math-expr'>6º dia</span>?",
+    options: { a: "20", b: "17", c: "23", d: "15" },
+    correct: "a",
+    justification: "<b>Resposta: 20 músicas</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 5 (primeiro termo), r = 3 (razão), n = 6 (dia desejado)<br>a<sub>6</sub> = 5 + (6 - 1)·3 = 5 + 15 = <b>20</b><br><small>Alternativa correta: A</small>"
+  },
+  {
+    question: "Um serviço cobra uma taxa fixa de <span class='math-expr'>R$5</span> mais <span class='math-expr'>R$2 por unidade</span>. Qual é a função que representa esse valor?",
+    options: { a: "f(x)=5x+2", b: "f(x)=2x+5", c: "f(x)=2x-5", d: "f(x)=7x" },
+    correct: "b",
+    justification: "<b>Resposta: f(x) = 2x + 5</b><br><small>Função Afim: f(x) = ax + b</small><br>a = coeficiente angular (valor por unidade) = 2<br>b = coeficiente linear (taxa fixa) = 5<br>Portanto: <b>f(x) = 2x + 5</b><br><small>Alternativa correta: B</small>"
+  },
+  {
+    question: "Uma escada tem o primeiro degrau com <span class='math-expr'>10 cm</span> e cada degrau aumenta <span class='math-expr'>2 cm</span>. Qual a altura do <span class='math-expr'>15º degrau</span>?",
+    options: { a: "36", b: "40", c: "38", d: "42" },
+    correct: "c",
+    justification: "<b>Resposta: 38 cm</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 10 cm, r = 2 cm, n = 15<br>a<sub>15</sub> = 10 + (15 - 1)·2 = 10 + 28 = <b>38 cm</b><br><small>Alternativa correta: C</small>"
+  },
+  {
+    question: "Se <span class='math-expr'>f(x)=3x+1</span>, qual é o valor de <span class='math-expr'>f(4)</span>?",
+    options: { a: "12", b: "10", c: "15", d: "13" },
+    correct: "d",
+    justification: "<b>Resposta: 13</b><br><small>Para calcular f(4), substituímos x por 4 na função:</small><br>f(4) = 3·(4) + 1 = 12 + 1 = <b>13</b><br><small>Alternativa correta: D</small>"
+  },
+  {
+    question: "Uma pessoa guarda <span class='math-expr'>R$2</span> no primeiro dia e aumenta <span class='math-expr'>R$2 por dia</span>. Quanto ela guarda no <span class='math-expr'>10º dia</span>?",
+    options: { a: "22", b: "18", c: "24", d: "20" },
+    correct: "d",
+    justification: "<b>Resposta: R$ 20</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 2, r = 2, n = 10<br>a<sub>10</sub> = 2 + (10 - 1)·2 = 2 + 18 = <b>20</b><br><small>Alternativa correta: D</small>"
+  },
+  {
+    question: "Uma corrida custa <span class='math-expr'>R$10 fixo</span> mais <span class='math-expr'>R$4 por km</span>. Quanto custa uma corrida de <span class='math-expr'>5 km</span>?",
+    options: { a: "30", b: "25", c: "35", d: "20" },
+    correct: "a",
+    justification: "<b>Resposta: R$ 30</b><br><small>Função do custo: C(x) = 4x + 10, onde x = km</small><br>C(5) = 4·5 + 10 = 20 + 10 = <b>30</b><br>Ou seja: R$ 20 (variável) + R$ 10 (fixo) = R$ 30<br><small>Alternativa correta: A</small>"
+  },
+  {
+    question: "Uma sequência segue o padrão: <span class='math-expr'>12, 16, 20, 24...</span>. Qual é o <span class='math-expr'>8º termo</span>?",
+    options: { a: "44", b: "36", c: "48", d: "40" },
+    correct: "d",
+    justification: "<b>Resposta: 40</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 12, r = 4 (16-12=4), n = 8<br>a<sub>8</sub> = 12 + (8 - 1)·4 = 12 + 28 = <b>40</b><br><small>Alternativa correta: D</small>"
+  },
+ {
+  question: "Uma empresa cobra uma taxa fixa de <span class='math-expr'>R$8</span> mais <span class='math-expr'>R$3 por produto</span>. Qual será o valor pago ao comprar <span class='math-expr'>4 produtos</span>?",
+  options: { a: "18", b: "20", c: "22", d: "24" },
+  correct: "b",
+  justification: "<b>Resposta: R$ 20</b><br><small>Função afim: f(x) = ax + b</small><br>a = 3 (valor por produto), b = 8 (taxa fixa)<br>f(4) = 3·4 + 8 = 12 + 8 = <b>20</b><br><small>Alternativa correta: B</small>"
+}
+]
 // Computed
-const currentQuestion = computed(() => questions[currentQuestionIndex.value])
-const isLastQuestion = computed(() => currentQuestionIndex.value === questions.length - 1)
-const progressPercentage = computed(() => ((currentQuestionIndex.value + 1) / questions.length) * 100)
+const currentQuestion = computed(() => questions.value[currentQuestionIndex.value])
+const isLastQuestion = computed(() => 
+  currentQuestionIndex.value === questions.value.length - 1
+)
+
+const progressPercentage = computed(() => 
+  ((currentQuestionIndex.value + 1) / questions.value.length) * 100
+)
 
 // Lifecycle
 onMounted(() => {
+    generateQuestions()
   startTimer()
 })
 
@@ -259,6 +246,27 @@ const startTimer = () => {
   }, 1000)
 }
 
+const generateQuestions = () => {
+  let finalQuestions = [...originalQuestions]
+
+  // embaralha somente se marcado e não for fácil
+  if (props.shuffle && props.difficulty !== 'easy') {
+    finalQuestions = shuffleArray(finalQuestions)
+  }
+
+  questions.value = finalQuestions
+}
+
+const shuffleArray = (array) => {
+  const arr = [...array]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
+
 const stopTimer = () => {
   if (timerInterval) {
     clearInterval(timerInterval)
@@ -271,13 +279,15 @@ const handleTimeExpired = () => {
   showFeedback.value = true
   isCorrect.value = false
   
-  // Salvar no histórico
-  quizHistory.value.push({
-    question: currentQuestion.value.question,
-    correctAnswer: currentQuestion.value.correct,
-    correctText: currentQuestion.value.options[currentQuestion.value.correct],
-    userAnswer: null
-  })
+  const userAnswerSnapshot = option // 👈 salva direto do clique
+
+quizHistory.value.push({
+  question: questionSnapshot.question,
+  correctAnswer: questionSnapshot.correct,
+  correctText: questionSnapshot.options[questionSnapshot.correct],
+  userAnswer: userAnswerSnapshot, // 👈 usa snapshot
+  justification: questionSnapshot.justification
+})
 }
 
 // Quiz Logic
@@ -287,28 +297,34 @@ const selectOption = (option) => {
   selectedOption.value = option
   userAnswers.value[currentQuestionIndex.value] = option
   stopTimer()
-  checkAnswer()
+  checkAnswer(option)
 }
 
-const checkAnswer = () => {
+const checkAnswer = (option) => {
+  const questionSnapshot = { ...currentQuestion.value } // 👈 congela a questão
+  const userAnswerSnapshot = option // 👈 salva direto
+
   showFeedback.value = true
-  isCorrect.value = selectedOption.value === currentQuestion.value.correct
-  
+  isCorrect.value = option === questionSnapshot.correct
+
   if (isCorrect.value) {
     score.value++
     correctAnswers.value++
   } else {
     wrongAnswers.value++
   }
-  
-  // Salvar no histórico
+
+  console.log("Resposta do usuário:", userAnswerSnapshot)
+
   quizHistory.value.push({
-    question: currentQuestion.value.question,
-    correctAnswer: currentQuestion.value.correct,
-    correctText: currentQuestion.value.options[currentQuestion.value.correct],
-    userAnswer: selectedOption.value
+    question: questionSnapshot.question,
+    correctAnswer: questionSnapshot.correct,
+    correctText: questionSnapshot.options[questionSnapshot.correct],
+    userAnswer: userAnswerSnapshot,
+    justification: questionSnapshot.justification
   })
 }
+
 
 const nextQuestion = () => {
   if (isLastQuestion.value) {
@@ -330,13 +346,14 @@ const resetQuestion = () => {
 const finishQuiz = async () => {
   stopTimer()
 
-  const result = {
-    name: props.playerName,
-    score: score.value,
-    correct: correctAnswers.value,
-    wrong: wrongAnswers.value,
-    difficulty: props.difficulty
-  }
+ const result = {
+  name: props.playerName,
+  score: score.value,
+  correct: correctAnswers.value,
+  wrong: wrongAnswers.value,
+  difficulty: props.difficulty,
+  history: quizHistory.value // 👈 ESSENCIAL
+}
 
   try {
   const res = await fetch('https://quiz-backend-4c5y.onrender.com/ranking', {

@@ -142,6 +142,28 @@
                   </button>
                 </div>
               </div>
+                 <div class="form-group">
+  <label class="form-label">
+    <Shuffle size="18" />
+    Embaralhar questões
+  </label>
+
+  <div class="shuffle-option">
+    <input 
+      type="checkbox" 
+      v-model="shuffleQuestions"
+      :disabled="selectedDifficulty === 'easy'"
+    />
+
+    <span>
+      {{ selectedDifficulty === 'easy'
+        ? 'Indisponível no modo fácil'
+        : (shuffleQuestions ? 'Ativado' : 'Desativado')
+      }}
+    </span>
+  </div>
+</div>
+
 
               <!-- Preview da seleção -->
               <div class="selection-preview" v-if="playerName">
@@ -176,15 +198,16 @@
 
     <!-- TELA 3: QUIZ -->
     <transition name="slide-left" mode="out-in">
-      <Quiz
-        v-if="currentScreen === 'quiz'"
-        key="quiz"
-        :player-name="playerName"
-        :difficulty="selectedDifficulty"
-        :difficulty-config="currentDifficulty"
-        @finish="handleQuizFinish"
-        @exit="goToHome"
-      />
+     <Quiz
+  v-if="currentScreen === 'quiz'"
+  key="quiz"
+  :player-name="playerName"
+  :difficulty="selectedDifficulty"
+  :difficulty-config="currentDifficulty"
+  :shuffle="shuffleQuestions"
+  @finish="handleQuizFinish"
+  @exit="goToHome"
+/>
     </transition>
 
     <!-- TELA 4: RESULTADOS -->
@@ -206,7 +229,7 @@
             <div class="score-content">
               <span class="score-number">{{ finalScore }}</span>
               <span class="score-divider">/</span>
-              <span class="score-total">10</span>
+              <span class="score-total">8</span>
             </div>
           </div>
 
@@ -284,16 +307,18 @@
                 <div class="gabarito-number">{{ index + 1 }}</div>
                 <div class="gabarito-question" v-html="item.question"></div>
                 <div class="gabarito-answer">
-                  <span class="answer-label">Resposta:</span>
-                  <span class="answer-letter">{{ item.correctAnswer.toUpperCase() }}</span>
-                  <span class="answer-text">{{ item.correctText }}</span>
-                </div>
-                <div v-if="item.userAnswer" class="user-answer">
-                  <span class="user-label">Você respondeu:</span>
-                  <span :class="['user-letter', item.userAnswer === item.correctAnswer ? 'right' : 'wrong']">
-                    {{ item.userAnswer.toUpperCase() }}
-                  </span>
-                </div>
+  <span class="answer-label">Resposta:</span>
+  <span class="answer-letter">{{ item.correctAnswer.toUpperCase() }}</span>
+  <span class="answer-text">{{ item.correctText }}</span>
+</div>
+               <div class="gabarito-explanation" v-html="item.justification"></div>
+
+<div v-if="item.userAnswer != null" class="user-answer">
+  <span class="user-label">Você respondeu:</span>
+  <span :class="['user-letter', item.userAnswer === item.correctAnswer ? 'right' : 'wrong']">
+    {{ item.userAnswer.toUpperCase() }}
+  </span>
+</div>
                 <div v-else class="user-answer timeout">
                   <TimerOff size="16" />
                   <span class="user-label">Tempo esgotado</span>
@@ -329,7 +354,9 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { watch } from 'vue'
 import Swal from 'sweetalert2'
+import { Shuffle } from 'lucide-vue-next'
 import 'sweetalert2/dist/sweetalert2.min.css'
 import { 
   Target, Play, Trophy, ArrowLeft, Cog, User, Layers, 
@@ -348,6 +375,17 @@ const playerName = ref('')
 const selectedDifficulty = ref('easy')
 const showGabarito = ref(false)
 const showRanking = ref(false)
+const isReplay = ref(false)
+
+
+const shuffleQuestions = ref(false)
+
+// controla automaticamente
+watch(selectedDifficulty, (newVal) => {
+  if (newVal === 'easy') {
+    shuffleQuestions.value = false // trava no fácil
+  }
+})
 
 const finalScore = ref(0)
 const finalCorrect = ref(0)
@@ -419,7 +457,7 @@ const goToSetup = () => {
 }
 
 const startQuiz = async () => {
-  const name = playerName.value.trim()
+  const name = playerName.value.trim()  
 
   if (!name) {
     await Swal.fire({
@@ -446,7 +484,7 @@ const startQuiz = async () => {
     const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/check-name?name=${encodeURIComponent(name)}`)
     const data = await res.json()
 
-    if (data.exists) {
+  if (data.exists && !isReplay.value) {
       await Swal.fire({
         icon: 'error',
         title: 'Nome em uso',
@@ -460,6 +498,8 @@ const startQuiz = async () => {
     }
 
     currentScreen.value = 'quiz'
+    isReplay.value = false
+
   } catch (err) {
     console.error('Erro ao verificar nome:', err)
     await Swal.fire({
@@ -501,10 +541,15 @@ const handleQuizFinish = (results) => {
 }
 
 const restartQuiz = () => {
-  currentScreen.value = 'quiz'
+  isReplay.value = true
+  currentScreen.value = 'setup'
+
+  finalScore.value = 0
+  finalCorrect.value = 0
+  finalWrong.value = 0
+  quizHistory.value = []
 }
 </script>
-
 
 <style scoped>
 /* Logo Image - Estilo ícone circular */
@@ -1590,12 +1635,20 @@ const restartQuiz = () => {
   color: #718096;
   font-weight: 600;
 }
+.gabarito-item:not(.correct) .user-letter {
+  background: #F44336;
+}
+
+.gabarito-item.correct .user-letter {
+  background: #4CAF50;
+}
+
 
 .answer-letter {
   width: 28px;
   height: 28px;
   background: var(--success);
-  color: white;
+  color: black;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -1646,7 +1699,7 @@ const restartQuiz = () => {
 
 .user-letter.wrong {
   background: var(--error);
-  color: white;
+  color: black;
 }
 
 .gabarito-summary {
