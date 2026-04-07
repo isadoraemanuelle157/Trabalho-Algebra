@@ -61,7 +61,7 @@
               <div class="feature-list">
                 <div class="feature-item">
                   <BarChart3 size="24" />
-                  <span>10 questões desafiadoras</span>
+                  <span>8 questões desafiadoras</span>
                 </div>
                 <div class="feature-item">
                   <Clock size="24" />
